@@ -13,6 +13,7 @@ OUT_FOLDER = "union_budgets"
 IGNORE_URLS_WITH_TEXT = ["Previous", "Next"]
 BUDGET_CATEGORIES_XPATH = "//div[@class='sidePanels budget']/div[@class='content']/ul/li/a|//div[@class='sidePanels sidePanelsInner budget']//h3[@class='menuheader budget']/a" 
 CHILD_LINKS_XPATH = "//div[@class='contentPanInner']//div[@class='content']//a"  
+DOCUMENT_FORMATS = ["PDF","EXCEL"]
 
 class UnionBudgetsScrapper2011_16(ScrappingUtils):
     def fetch_docs_for_year(self, year=None, base_url=BASE_URL):
@@ -43,11 +44,13 @@ class UnionBudgetsScrapper2011_16(ScrappingUtils):
         links = self.get_links_from_url(child_url, CHILD_LINKS_XPATH)
         link_name = ""
         for link in links:
-            print(link.xpath("@href")[0], link.text)
+            link_text = ' '.join(link.xpath(".//text()")).strip()
             if link.xpath("@target"):
-                file_name = link.text.strip()
-                if file_name[0] == "[":
+                file_name = link_text.strip()
+                if file_name[0] == "[": 
                     file_name = link_name
+                elif file_name in DOCUMENT_FORMATS:
+                    file_name = link.xpath("./../../*[1]/text()")[0].strip()
                 else:
                     link_name = file_name
                 self.save_link_as_file(link, child_dir, base_url, file_name)    
@@ -82,9 +85,8 @@ class UnionBudgetsScrapper2011_16(ScrappingUtils):
         self.fetch_docs_for_year()
         links = self.get_links_from_url(PREVIOUS_YEARS_URL, CHILD_LINKS_XPATH)
         for link in links:
-            print(link.text, BASE_URL + link.xpath("@href")[0])
             self.fetch_docs_for_year(link.text, BASE_URL + link.xpath("@href")[0])
 
 if __name__ == '__main__':
-    obj = UnionBudgetsScrapper()
+    obj = UnionBudgetsScrapper2011_16()
     obj.fetch_all_union_budget_docs()
