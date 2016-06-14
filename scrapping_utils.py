@@ -9,11 +9,12 @@ import requests
 from requests.adapters import HTTPAdapter
 import shutil
 
-fileConfig('logging_config.ini')
+fileConfig('scrappers/logging_config.ini')
 logger = logging.getLogger()
 DEFAULT_XPATH = ".//text()"
 MAX_URL_RETRIES = 25
 SAMPLE_URL = "http://www.cbgaindia.org/"
+TEXT_DOC_XPATH = "//text()"
 
 class ScrappingUtils(object):
     def __init__(self):
@@ -56,13 +57,21 @@ class ScrappingUtils(object):
         except Exception, error_message:
             logger.error("Unable to fetch file at following URL: %s, error message: %s" % (url, error_message)) 
 
+    def get_page_dom(self, url):
+        '''Fetches page from URL and returns dom tree
+        '''
+        dom_tree = None
+        page_text = self.fetch_page(url)
+        if page_text:
+            dom_tree = etree.HTML(page_text)
+        return dom_tree
+    
     def get_links_from_url(self, url, xpath):
         '''Fetches links from URL by the xpaths
         '''
         links = []
-        page_text = self.fetch_page(url)
-        if page_text:
-            dom_tree = etree.HTML(page_text)
+        dom_tree = self.get_page_dom(url)
+        if dom_tree is not None:
             links = dom_tree.xpath(xpath)
         return links
 
@@ -80,11 +89,11 @@ class ScrappingUtils(object):
             element_text = re.sub(r" {2,}|\r\n", " ", element_text).strip()
         return element_text
 
-    def save_file_as_txt(self, page_text, file_path):
+    def save_file_as_txt(self, page_text, file_path, xpath=TEXT_DOC_XPATH):
         '''Saves HTML page text as TXT file document
         '''
         dom_tree = etree.HTML(page_text)
-        doc_text = self.get_text_from_element(dom_tree, remove_new_lines=False, xpath=TEXT_DOC_XPATH, join_operator="\n")
+        doc_text = self.get_text_from_element(dom_tree, remove_new_lines=False, xpath=xpath, join_operator="\n")
         doc_text = re.sub(r"\n{2,}", "\n", doc_text)
         txt_file = open(file_path, "wb")
         txt_file.write(doc_text)
