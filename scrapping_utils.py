@@ -66,13 +66,18 @@ class ScrappingUtils(object):
             dom_tree = etree.HTML(page_text)
         return dom_tree
     
+    def get_links_from_dom(self, dom_tree, xpath):
+        '''Fetches links from Page DOM by the xpaths
+        '''
+        return dom_tree.xpath(xpath)
+
     def get_links_from_url(self, url, xpath):
         '''Fetches links from URL by the xpaths
         '''
         links = []
         dom_tree = self.get_page_dom(url)
         if dom_tree is not None:
-            links = dom_tree.xpath(xpath)
+            links = self.get_links_from_dom(dom_tree, xpath)
         return links
 
     def get_text_from_element(self, element, remove_new_lines=True, xpath=None, join_operator=None):

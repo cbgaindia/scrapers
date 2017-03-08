@@ -3,7 +3,7 @@
 from datetime import date
 import logging
 from logging.config import fileConfig
-from scrapping_utils import ScrappingUtils
+from scrappers.scrapping_utils import ScrappingUtils
 
 fileConfig('scrappers/logging_config.ini')
 logger = logging.getLogger()
@@ -70,7 +70,7 @@ class UnionBudgetsScrapper2011_16(ScrappingUtils):
         '''Fetches link as a file and save it on the disk
         '''
         if not file_name:
-            file_name = link.text.strip()
+            file_name = link.text.strip().replace("/", "|")
         sub_link = link.xpath("@href")[0] 
         if "?" in base_url:
             base_url = "/".join(base_url.split("/")[:-1])
